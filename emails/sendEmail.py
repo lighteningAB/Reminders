@@ -1,0 +1,1 @@
+#takes in message string and recipient email string and returns boolean
