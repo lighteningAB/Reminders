@@ -1,18 +1,28 @@
-import { Input, Flex, Box} from "@chakra-ui/react"
+import { Heading, Box, Flex } from "@chakra-ui/react"
+import DayBlock from "./DayBlock";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const Page = () => {
-  return (
-    <Flex minH="100vh" align="center" justify="center">
-      <Box width={"50%"}>
-        <Input placeholder="Enter your email" mb={4} />
-        {days.map((text, idx) => (
-          <Input key={idx} placeholder={`Enter your tasks for ${text}` } mb={2} />
-        ))}
+
+const LandingPage = () => {
+  return(
+    <Flex width ={"100%"} align="center" justify={"center"} mt="5%" direction="column">
+      <Box mb={4} border = "1px solid red" padding = "3%" width = "50%" display="flex" justifyContent="center" alignItems="center" borderRadius="30" >
+        <Heading>Email Reminders</Heading>
+      </Box>
+      <Box mb={4} border = "1px solid red" padding = "1%" width = "80%" borderRadius="30" >
+        <Heading size="md">Your Weekly Schedule: </Heading>
+        <Flex direction="row">
+          {days.map((day, idx) => (
+            <DayBlock day={day} key = {idx} width = "25%"/>
+          ))}
+        </Flex>
+      </Box>
+      <Box mb={4} border = "1px solid red" padding = "1%" width = "80%" borderRadius="30">
+        <Heading size="md">Special Tasks: </Heading>
       </Box>
     </Flex>
   )
 }
 
-export default Page;
+export default LandingPage;
