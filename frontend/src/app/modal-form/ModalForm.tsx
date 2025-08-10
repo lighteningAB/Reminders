@@ -22,8 +22,9 @@ const Form = () => {
         return;
       }
 
-      await postTasks(filteredTasks);
+      await postTasks(email, filteredTasks);
       alert("Tasks submitted!");
+      
       setEmail("");
       setTasks(Array(days.length).fill(""));
     } catch (error) {
