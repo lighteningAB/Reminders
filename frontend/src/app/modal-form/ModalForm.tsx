@@ -24,6 +24,8 @@ const Form = () => {
 
       await postTasks(filteredTasks);
       alert("Tasks submitted!");
+      setEmail("");
+      setTasks(Array(days.length).fill(""));
     } catch (error) {
       console.error(error);
       alert("Failed to submit tasks");
