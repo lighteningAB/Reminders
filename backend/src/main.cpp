@@ -17,11 +17,21 @@ int main()
 {
 
     httplib::Server svr;
+
+    svr.set_default_headers({{"Access-Control-Allow-Origin", "http://localhost:3000"},
+                             {"Access-Control-Allow-Headers", "Content-Type"},
+                             {"Access-Control-Allow-Methods", "POST, GET, OPTIONS"}});
+
+    svr.Options(R"(/api/.*)", [](const httplib::Request &, httplib::Response &res)
+                {
+                    res.status = 204; // No Content
+                });
+
     std::mutex mtx;
     std::vector<Task> tasks;
     std::atomic<uint64_t> next_id{1};
 
-    svr.Get("/api/health", [](const httplib::Request &, httplib::Response &res)
+    svr.Get("/api/health", [&](const httplib::Request &, httplib::Response &res)
             { res.set_content(R"({"status":"ok"})", "application/json"); });
 
     svr.Get("/api/tasks", [&](const httplib::Request &, httplib::Response &res)
@@ -34,16 +44,31 @@ int main()
     svr.Post("/api/tasks", [&](const httplib::Request &req, httplib::Response &res)
              {
         try {
-            auto body = json::parse(req.body);
-            if (!body.contains("title")) { res.status = 400; return; }
-            Task t{next_id++, body["title"].get<std::string>()};
-            { std::lock_guard<std::mutex> lock(mtx); tasks.push_back(t); }
+            json body = json::parse(req.body);
+            if (!body.contains("email") || !body.contains("tasks") || !body["tasks"].is_array()) {
+                res.status = 400;
+                res.set_content("bad payload", "text/plain");
+                return;
+            }
+            std::string email = body["email"].get<std::string>();
+            std::lock_guard<std::mutex> lock(mtx);
+            for (auto& s : body["tasks"]) {
+                std::string title = s.get<std::string>();
+                Task t{next_id++, email + ": " + title};
+                tasks.push_back(t);
+            }
             res.status = 201;
-            res.set_content(json{{"id", t.id}, {"title", t.title}}.dump(), "application/json");
+            res.set_content(R"({"ok":true})", "application/json");
+
+            for (Task& t : tasks) {
+                std::cout << "User - " << t.id << std::endl;
+                std::cout << "Details { " << t.title << " }" << std::endl;
+            }
+            
         } catch(...) {
             res.status = 400;
         } });
 
-    std::cout << "Listening on http://localhost:8080\n";
+    std::cout << "API on http://localhost:8080\n";
     svr.listen("0.0.0.0", 8080);
 }
