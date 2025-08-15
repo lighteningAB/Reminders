@@ -4,7 +4,11 @@ import { postTasks } from "../api/api-manager.service";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const Form = () => {
+interface ModalFormProps {
+  onSuccess: () => void;
+}
+
+const Form = ({ onSuccess }: ModalFormProps) => {
   const [email, setEmail] = useState("");
   const [tasks, setTasks] = useState<string[]>(Array(days.length).fill(""));
 
@@ -15,27 +19,31 @@ const Form = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      const filteredTasks = tasks.filter((task) => task.trim());
-      if (filteredTasks.length === 0) {
-        alert("No tasks to submit!");
-        return;
-      }
+  try {
+    const filteredTasks = tasks
+      .map((task, i) => ({ day: days[i], title: task.trim() }))
+      .filter((task) => task.title !== "");
 
-      await postTasks(email, filteredTasks);
-      alert("Tasks submitted!");
-      
-      setEmail("");
-      setTasks(Array(days.length).fill(""));
-    } catch (error) {
-      console.error(error);
-      alert("Failed to submit tasks");
+    if (filteredTasks.length === 0) {
+      alert("No tasks to submit!");
+      return;
     }
-  };
+
+    await postTasks(email, filteredTasks);
+    alert("Tasks submitted!");
+    
+    setEmail("");
+    setTasks(Array(days.length).fill(""));
+    onSuccess();
+  } catch (error) {
+    console.error(error);
+    alert("Failed to submit tasks");
+  }
+};
 
   return (
     <Flex minH="100vh" align="center" justify="center">
-      <Box width={"50%"}>
+      <Box width={"80%"}>
         <Input 
           placeholder="Enter your email" 
           mb={4} 
