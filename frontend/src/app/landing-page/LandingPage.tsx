@@ -3,12 +3,36 @@
 import { Heading, Box, Flex, Button, useDisclosure, Modal, ModalOverlay, ModalContent, ModalBody } from "@chakra-ui/react"
 import DayBlock from "./DayBlock";
 import ModalForm from "../modal-form/ModalForm";
+import { useEffect, useState } from "react";
+import { getTasks } from "../api/api-manager.service";
 
+
+interface Task {
+  id: number;
+  title: string;
+  day: string;
+}
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 
 const LandingPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+  fetchTasks();
+}, []);
+
+  const fetchTasks  = async () => {
+    try {
+      const data = await getTasks();
+      setTasks(data);
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error);
+    }
+  };
+
+
 
   return(
     <Flex width ={"100%"} align="center" justify={"center"} mt="5%" direction="column">
@@ -19,7 +43,12 @@ const LandingPage = () => {
         <Heading size="md">Your Weekly Schedule: </Heading>
         <Flex direction="row">
           {days.map((day, idx) => (
-            <DayBlock day={day} key = {idx} width = "25%"/>
+            <DayBlock
+              key={idx}
+              day={day}
+              width="25%"
+              tasks={tasks.filter(task => task.day.toLowerCase() === day.toLowerCase())}
+            />
           ))}
         </Flex>
       </Box>
@@ -33,7 +62,11 @@ const LandingPage = () => {
         <ModalOverlay />
         <ModalContent>
           <ModalBody>
-            <ModalForm />
+            <ModalForm onSuccess={() => {
+              fetchTasks();
+              onClose();
+              }} 
+              />
           </ModalBody>
         </ModalContent>
       </Modal>
